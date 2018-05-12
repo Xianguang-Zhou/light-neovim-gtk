@@ -104,14 +104,21 @@ class Terminal(Vte.Terminal):
             pass
 
 
+class Window(Gtk.Window):
+    def __init__(self):
+        Gtk.Window.__init__(self)
+        self.set_title('Neovim')
+        self.set_icon_from_file(
+            os.path.join(os.path.dirname(__file__), 'icon', 'neovim.svg'))
+        terminal = Terminal()
+        self.add(terminal)
+        terminal.connect('child-exited',
+                         lambda _status, _user_data: self.close())
+        self.connect('delete-event', terminal.on_window_delete)
+
+
 def main():
-    window = Gtk.Window()
-    window.set_title('Neovim')
-    terminal = Terminal()
-    window.add(terminal)
-    terminal.connect('child-exited',
-                     lambda _status, _user_data: window.close())
-    window.connect('delete-event', terminal.on_window_delete)
+    window = Window()
     window.connect('destroy', Gtk.main_quit)
     window.show_all()
     Gtk.main()
