@@ -23,9 +23,10 @@ import uuid
 import neovim
 import gi
 gi.require_version('Pango', '1.0')
+gi.require_version('Gdk', '3.0')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Vte', '2.91')
-from gi.repository import GLib, Pango, Gtk, Vte
+from gi.repository import GLib, Pango, Gdk, Gtk, Vte
 
 __author__ = 'Xianguang Zhou <xianguang.zhou@outlook.com>'
 __copyright__ = 'Copyright (C) 2018 Xianguang Zhou <xianguang.zhou@outlook.com>'
@@ -75,6 +76,8 @@ class Terminal(Vte.Terminal):
             first_arg = args[0]
             if first_arg == 'Font':
                 GLib.idle_add(self._change_font, *args[1:])
+            elif first_arg == 'Color':
+                GLib.idle_add(self._change_color, *args[1:])
 
     def _change_font(self, font_str):
         font_family, *font_attrs = font_str.split(':')
@@ -89,6 +92,11 @@ class Terminal(Vte.Terminal):
                 font_desc.set_style(Pango.Style.ITALIC)
         self.set_font(font_desc)
         self._nvim.command('let g:GuiFont="%s"' % font_str, async_=True)
+
+    def _change_color(self, color_str):
+        rgba = Gdk.RGBA()
+        rgba.parse(color_str)
+        self.set_color_background(rgba)
 
     def on_window_delete(self, _event, _user_data):
         if self._is_child_exited:
