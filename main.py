@@ -74,7 +74,9 @@ class Terminal(Vte.Terminal):
     def _on_nvim_notification(self, event, args):
         if event == 'Gui':
             first_arg = args[0]
-            if first_arg == 'Font':
+            if first_arg == 'VimEnter':
+                GLib.idle_add(self.show)
+            elif first_arg == 'Font':
                 GLib.idle_add(self._change_font, *args[1:])
             elif first_arg == 'Color':
                 GLib.idle_add(self._change_color, *args[1:])
@@ -122,13 +124,13 @@ class Window(Gtk.Window):
         self.add(terminal)
         terminal.connect('child-exited',
                          lambda _status, _user_data: self.close())
+        terminal.connect('show', lambda _widget: self.show())
         self.connect('delete-event', terminal.on_window_delete)
 
 
 def main():
     window = Window()
     window.connect('destroy', Gtk.main_quit)
-    window.show_all()
     Gtk.main()
 
 
