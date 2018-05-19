@@ -26,7 +26,7 @@ gi.require_version('Pango', '1.0')
 gi.require_version('Gdk', '3.0')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Vte', '2.91')
-from gi.repository import GLib, Pango, Gdk, Gtk, Vte
+from gi.repository import GObject, GLib, Pango, Gdk, Gtk, Vte
 
 __author__ = 'Xianguang Zhou <xianguang.zhou@outlook.com>'
 __copyright__ = 'Copyright (C) 2018 Xianguang Zhou <xianguang.zhou@outlook.com>'
@@ -34,6 +34,8 @@ __license__ = 'AGPL-3.0'
 
 
 class Terminal(Vte.Terminal):
+    no_name_title = '[No Name]'
+
     def __init__(self):
         Vte.Terminal.__init__(self)
         self._is_child_exited = False
@@ -74,12 +76,26 @@ class Terminal(Vte.Terminal):
     def _on_nvim_notification(self, event, args):
         if event == 'Gui':
             first_arg = args[0]
-            if first_arg == 'VimEnter':
+            if first_arg == 'Path':
+                GLib.idle_add(self._change_path, *args[1:])
+            elif first_arg == 'VimEnter':
                 GLib.idle_add(self.show)
             elif first_arg == 'Font':
                 GLib.idle_add(self._change_font, *args[1:])
             elif first_arg == 'Color':
                 GLib.idle_add(self._change_color, *args[1:])
+
+    def _change_path(self, buf_full_path):
+        if len(buf_full_path) == 0:
+            self.emit('title-changed', Terminal.no_name_title)
+        else:
+            dir_path, buf_name = os.path.split(buf_full_path)
+            title = '%s (%s)' % (buf_name, dir_path)
+            self.emit('title-changed', title)
+
+    @GObject.Signal()
+    def title_changed(self, title: str):
+        pass
 
     def _change_font(self, font_str):
         font_family, *font_attrs = font_str.split(':')
@@ -117,7 +133,8 @@ class Terminal(Vte.Terminal):
 class Window(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self)
-        self.set_title('Neovim')
+        app_name = 'Neovim'
+        self.set_title(Terminal.no_name_title + ' - ' + app_name)
         self.set_icon_from_file(
             os.path.join(os.path.dirname(__file__), 'icon', 'neovim.svg'))
         terminal = Terminal()
@@ -125,6 +142,9 @@ class Window(Gtk.Window):
         terminal.connect('child-exited',
                          lambda _status, _user_data: self.close())
         terminal.connect('show', lambda _widget: self.show())
+        terminal.connect(
+            'title-changed',
+            lambda _terminal, title: self.set_title(title + ' - ' + app_name))
         self.connect('delete-event', terminal.on_window_delete)
 
 
