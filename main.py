@@ -38,6 +38,8 @@ class Terminal(Vte.Terminal):
 
     def __init__(self):
         Vte.Terminal.__init__(self)
+        self._nvim_buffer_name = Terminal.no_name_title
+        self._nvim_buffer_dir_path = ''
         self._is_child_exited = False
         self.connect('child-exited', self._on_child_exited)
         self._nvim_listen_address = os.path.join(GLib.get_tmp_dir(),
@@ -76,28 +78,37 @@ class Terminal(Vte.Terminal):
     def _on_nvim_notification(self, event, args):
         if event == 'Gui':
             first_arg = args[0]
-            if first_arg == 'Path':
-                GLib.idle_add(self._change_path, *args[1:])
+            if first_arg == 'Changed':
+                GLib.idle_add(self._notify_changed, *args[1:])
+            elif first_arg == 'Buffer':
+                GLib.idle_add(self._notify_buffer, *args[1:])
             elif first_arg == 'VimEnter':
                 GLib.idle_add(self.show)
             elif first_arg == 'Font':
-                GLib.idle_add(self._change_font, *args[1:])
+                GLib.idle_add(self._notify_font, *args[1:])
             elif first_arg == 'Color':
-                GLib.idle_add(self._change_color, *args[1:])
+                GLib.idle_add(self._notify_color, *args[1:])
 
-    def _change_path(self, buf_full_path):
-        if len(buf_full_path) == 0:
-            self.emit('title-changed', Terminal.no_name_title)
+    def _notify_changed(self, buf_changed):
+        buf_changed = ' +' if buf_changed else ''
+        title = self._nvim_buffer_name + buf_changed + self._nvim_buffer_dir_path
+        self.emit('title-changed', title)
+
+    def _notify_buffer(self, buf_path, buf_changed):
+        if len(buf_path) == 0:
+            self._nvim_buffer_name = Terminal.no_name_title
+            self._nvim_buffer_dir_path = ''
         else:
-            dir_path, buf_name = os.path.split(buf_full_path)
-            title = '%s (%s)' % (buf_name, dir_path)
-            self.emit('title-changed', title)
+            self._nvim_buffer_dir_path, self._nvim_buffer_name = os.path.split(
+                buf_path)
+            self._nvim_buffer_dir_path = ' (' + self._nvim_buffer_dir_path + ')'
+        self._notify_changed(buf_changed)
 
     @GObject.Signal()
     def title_changed(self, title: str):
         pass
 
-    def _change_font(self, font_str):
+    def _notify_font(self, font_str):
         font_family, *font_attrs = font_str.split(':')
         font_desc = Pango.FontDescription(string=font_family.replace('_', ' '))
         for attr in font_attrs:
@@ -111,7 +122,7 @@ class Terminal(Vte.Terminal):
         self.set_font(font_desc)
         self._nvim.command('let g:GuiFont="%s"' % font_str, async_=True)
 
-    def _change_color(self, color_str):
+    def _notify_color(self, color_str):
         rgba = Gdk.RGBA()
         rgba.parse(color_str)
         self.set_color_background(rgba)
