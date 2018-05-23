@@ -84,12 +84,3 @@ else
   autocmd VimEnter * call s:GuiBufEntered()
 endif
 
-function s:GuiVimEnter() abort
-  call rpcnotify(g:gui_channel, 'Gui', 'VimEnter')
-endfunction
-if v:vim_did_enter
-  call s:GuiVimEnter()
-else
-  autocmd VimEnter * call s:GuiVimEnter()
-endif
-

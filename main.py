@@ -38,18 +38,14 @@ class Terminal(Vte.Terminal):
 
     def __init__(self):
         Vte.Terminal.__init__(self)
+        self._is_vim_inited = False
         self._nvim_buffer_name = Terminal.no_name_title
         self._nvim_buffer_dir_path = ''
-        self._is_child_exited = False
-        self.connect('child-exited', self._on_child_exited)
         self._nvim_listen_address = os.path.join(GLib.get_tmp_dir(),
                                                  'nvim_' + str(uuid.uuid4()))
         self._cursor_moved_handler_id = self.connect('cursor-moved',
                                                      Terminal._on_cursor_moved)
         GLib.idle_add(self._spawn)
-
-    def _on_child_exited(self, _status, _user_data):
-        self._is_child_exited = True
 
     def _on_cursor_moved(self):
         self.disconnect(self._cursor_moved_handler_id)
@@ -58,12 +54,17 @@ class Terminal(Vte.Terminal):
         del self._nvim_listen_address
         self._nvim.vars['gui_channel'] = self._nvim.channel_id
         self._nvim.subscribe('Gui')
-        self._nvim.command('ru plugin/light-neovim-gtk.vim', async_=True)
+        self._nvim.command('ru plugin/light_neovim_gtk.vim', async_=True)
         self._nvim.command('ru! ginit.vim', async_=True)
         threading.Thread(
             target=self._nvim.run_loop,
             args=(self._on_nvim_request, self._on_nvim_notification),
             daemon=True).start()
+
+        def _callback():
+            self._is_vim_inited = True
+
+        self._nvim.loop.call_later(0.1, _callback)
 
     def _spawn(self):
         runtime_path = os.path.join(os.path.dirname(__file__), 'runtime')
@@ -82,8 +83,6 @@ class Terminal(Vte.Terminal):
                 GLib.idle_add(self._notify_changed, *args[1:])
             elif first_arg == 'Buffer':
                 GLib.idle_add(self._notify_buffer, *args[1:])
-            elif first_arg == 'VimEnter':
-                GLib.idle_add(self.show)
             elif first_arg == 'Font':
                 GLib.idle_add(self._notify_font, *args[1:])
             elif first_arg == 'Color':
@@ -128,11 +127,9 @@ class Terminal(Vte.Terminal):
         self.set_color_background(rgba)
 
     def on_window_delete(self, _event, _user_data):
-        if self._is_child_exited:
-            return False
-        else:
+        if self._is_vim_inited:
             self._nvim.async_call(self._quit_nvim)
-            return True
+        return True
 
     def _quit_nvim(self):
         try:
@@ -144,15 +141,14 @@ class Terminal(Vte.Terminal):
 class Window(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self)
-        app_name = 'Neovim'
+        app_name = 'Nvim'
         self.set_title(Terminal.no_name_title + ' - ' + app_name)
         self.set_icon_from_file(
             os.path.join(os.path.dirname(__file__), 'icon', 'neovim.svg'))
         terminal = Terminal()
         self.add(terminal)
         terminal.connect('child-exited',
-                         lambda _status, _user_data: self.close())
-        terminal.connect('show', lambda _widget: self.show())
+                         lambda _status, _user_data: self.destroy())
         terminal.connect(
             'title-changed',
             lambda _terminal, title: self.set_title(title + ' - ' + app_name))
@@ -162,6 +158,7 @@ class Window(Gtk.Window):
 def main():
     window = Window()
     window.connect('destroy', Gtk.main_quit)
+    window.show_all()
     Gtk.main()
 
 
