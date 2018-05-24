@@ -5,5 +5,7 @@ SCRIPT_PATH=$(readlink -f "$0")
 # Absolute path this script is in, thus /home/user/bin
 SCRIPT_DIR_PATH=$(dirname "$SCRIPT_PATH")
 
-ln -s $SCRIPT_DIR_PATH/run.sh ~/.local/bin/gnvim
+ln -i -s $SCRIPT_DIR_PATH/run.sh ~/.local/bin/gnvim
+cp -f $SCRIPT_DIR_PATH/icon/light_neovim_gtk.svg ~/.local/share/icons/
+cp -f $SCRIPT_DIR_PATH/light_neovim_gtk.desktop ~/.local/share/applications/
 

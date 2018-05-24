@@ -118,7 +118,7 @@ class Window(Gtk.Window):
         Gtk.Window.__init__(self)
         self.set_title('NVIM')
         self.set_icon_from_file(
-            os.path.join(resource_dir, 'icon', 'neovim.svg'))
+            os.path.join(resource_dir, 'icon', 'light_neovim_gtk.svg'))
         self._terminal = Terminal()
         self.add(self._terminal)
         self._terminal.connect('child-exited',
