@@ -36,8 +36,19 @@ resource_dir = os.path.dirname(__file__)
 
 
 class Terminal(Vte.Terminal):
+    css_provider = Gtk.CssProvider.new()
+    css_provider.load_from_data(b'''
+GtkWidget {
+    -GtkWidget-cursor-aspect-ratio: 0.1;
+}
+''')
+
     def __init__(self):
         Vte.Terminal.__init__(self)
+        self.get_style_context().add_provider(
+            Terminal.css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        self.set_cursor_blink_mode(Vte.CursorBlinkMode.ON)
+        self.set_mouse_autohide(True)
         self._is_vim_inited = False
         self._nvim_listen_address = os.path.join(GLib.get_tmp_dir(),
                                                  'nvim_' + str(uuid.uuid4()))
