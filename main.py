@@ -26,11 +26,13 @@ gi.require_version('Pango', '1.0')
 gi.require_version('Gdk', '3.0')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Vte', '2.91')
-from gi.repository import GObject, GLib, Pango, Gdk, Gtk, Vte
+from gi.repository import GLib, Pango, Gdk, Gtk, Vte
 
 __author__ = 'Xianguang Zhou <xianguang.zhou@outlook.com>'
 __copyright__ = 'Copyright (C) 2018 Xianguang Zhou <xianguang.zhou@outlook.com>'
 __license__ = 'AGPL-3.0'
+
+resource_dir = os.path.dirname(__file__)
 
 
 class Terminal(Vte.Terminal):
@@ -63,7 +65,7 @@ class Terminal(Vte.Terminal):
         self._nvim.loop.call_later(0.1, _callback)
 
     def _spawn(self):
-        runtime_path = os.path.join(os.path.dirname(__file__), 'runtime')
+        runtime_path = os.path.join(resource_dir, 'runtime')
         self.spawn_sync(Vte.PtyFlags.DEFAULT, None,
                         ['nvim', '+set rtp^=' + runtime_path, *sys.argv[1:]],
                         ['NVIM_LISTEN_ADDRESS=' + self._nvim_listen_address],
@@ -116,15 +118,39 @@ class Window(Gtk.Window):
         Gtk.Window.__init__(self)
         self.set_title('NVIM')
         self.set_icon_from_file(
-            os.path.join(os.path.dirname(__file__), 'icon', 'neovim.svg'))
-        terminal = Terminal()
-        self.add(terminal)
-        terminal.connect('child-exited',
-                         lambda _status, _user_data: self.destroy())
-        terminal.connect(
+            os.path.join(resource_dir, 'icon', 'neovim.svg'))
+        self._terminal = Terminal()
+        self.add(self._terminal)
+        self._terminal.connect('child-exited',
+                               lambda _status, _user_data: self.destroy())
+        self._terminal.connect(
             'window-title-changed',
             lambda terminal: self.set_title(terminal.get_window_title()))
-        self.connect('delete-event', terminal.on_window_delete)
+        self.connect('delete-event', self._terminal.on_window_delete)
+        self._last_size = None
+        self.connect('size-allocate', Window._on_size_allocate)
+        self._initialize_size_handler_id = self._terminal.connect(
+            'window-title-changed', self._initialize_size)
+
+    def _initialize_size(self, terminal):
+        terminal.disconnect(self._initialize_size_handler_id)
+        del self._initialize_size_handler_id
+        self._last_size = None
+        self._on_size_allocate(self.get_allocation())
+
+    def _on_size_allocate(self, allocation):
+        if self._last_size == (allocation.width,
+                               allocation.height) or self.is_maximized():
+            return
+        terminal_allocation = self._terminal.get_allocation()
+        padding = self._terminal.get_style_context().get_padding(
+            self._terminal.get_state_flags())
+        width = allocation.width - terminal_allocation.width + padding.left + padding.right + self._terminal.get_char_width(
+        ) * self._terminal.get_column_count()
+        height = allocation.height - terminal_allocation.height + padding.top + padding.bottom + self._terminal.get_char_height(
+        ) * self._terminal.get_row_count()
+        self._last_size = (width, height)
+        self.resize(width, height)
 
 
 def main():

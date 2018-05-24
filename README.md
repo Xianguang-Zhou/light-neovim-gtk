@@ -6,7 +6,7 @@
 * pip https://pip.pypa.io/en/stable/
 * Neovim https://neovim.io/
 * Pynvim https://github.com/neovim/python-client
-* GTK+(>=3.0) https://www.gtk.org/
+* GTK+(>=3.12) https://www.gtk.org/
 * VTE https://wiki.gnome.org/Apps/Terminal/VTE
 * PyGObject https://wiki.gnome.org/Projects/PyGObject
 
