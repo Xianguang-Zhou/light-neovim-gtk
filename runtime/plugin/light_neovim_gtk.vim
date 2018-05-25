@@ -39,3 +39,17 @@ autocmd ColorScheme * call s:GuiColor()
 set title
 set termguicolors
 
+function s:GuiCursor() abort
+  let gui_cursor = execute('set guicursor')
+  let gui_cursor = strpart(gui_cursor, stridx(gui_cursor, '=') + 1)
+  let gui_cursor_parts = split(gui_cursor, ',')
+  let part_index = 0
+  for part in gui_cursor_parts
+    let gui_cursor_parts[part_index] = part . '-blinkwait175-blinkoff150-blinkon175'
+    let part_index += 1
+  endfor
+  let gui_cursor = join(gui_cursor_parts, ',')
+  execute('set guicursor=' . gui_cursor)
+endfunction
+call s:GuiCursor()
+
