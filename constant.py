@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Copyright (C) 2018 Xianguang Zhou <xianguang.zhou@outlook.com>
@@ -16,22 +15,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import gi
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
-from window import Window
+import os
 
 __author__ = 'Xianguang Zhou <xianguang.zhou@outlook.com>'
 __copyright__ = 'Copyright (C) 2018 Xianguang Zhou <xianguang.zhou@outlook.com>'
 __license__ = 'AGPL-3.0'
 
-
-def main():
-    window = Window()
-    window.connect('destroy', Gtk.main_quit)
-    window.show_all()
-    Gtk.main()
-
-
-if __name__ == '__main__':
-    main()
+resource_dir = os.path.dirname(__file__)
