@@ -6,11 +6,6 @@ if !has('nvim') || exists('g:GuiLoaded')
 endif
 let g:GuiLoaded = 1
 
-" Set Gui font
-function! GuiFont(font_str) abort
-  call rpcnotify(g:gui_channel, 'Gui', 'Font', a:font_str)
-endfunction
-
 " The GuiFont command. For compatibility there is also Guifont
 function s:GuiFontCommand(font_str) abort
   if a:font_str ==# ''
@@ -20,7 +15,7 @@ function s:GuiFontCommand(font_str) abort
       echo 'No GuiFont is set'
     endif
   else
-    call GuiFont(a:font_str)
+    call light_neovim_gtk#font#GuiFont(a:font_str)
   endif
 endfunction
 command! -nargs=? GuiFont call s:GuiFontCommand('<args>')
