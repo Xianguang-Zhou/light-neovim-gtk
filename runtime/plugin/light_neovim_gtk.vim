@@ -15,7 +15,7 @@ function s:GuiFontCommand(font_str) abort
       echo 'No GuiFont is set'
     endif
   else
-    call light_neovim_gtk#font#GuiFont(a:font_str)
+    call gui#Font(a:font_str)
   endif
 endfunction
 command! -nargs=? GuiFont call s:GuiFontCommand('<args>')
