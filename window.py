@@ -18,7 +18,7 @@
 import os
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import GObject, Gtk
 import constant
 from terminal import Terminal
 
@@ -41,28 +41,47 @@ class Window(Gtk.Window):
         self._terminal.connect(
             'window-title-changed',
             lambda terminal: self.set_title(terminal.get_window_title()))
+        self._last_terminal_size = None
+        self._terminal_resize_window_handler_id = self._terminal.connect(
+            'resize-window', self._on_terminal_resize_window)
         self.connect('delete-event', self._terminal.on_window_delete)
         self._last_size = None
-        self.connect('size-allocate', Window._on_size_allocate)
+        self._size_allocate_handler_id = self.connect('size-allocate',
+                                                      Window._on_size_allocate)
         self._initialize_size_handler_id = self._terminal.connect(
             'window-title-changed', self._initialize_size)
+
+    def _on_terminal_resize_window(self, _terminal, column_count, row_count):
+        if self._last_terminal_size == (column_count, row_count):
+            return
+        self._resize(column_count, row_count, self.get_allocation())
 
     def _initialize_size(self, terminal):
         terminal.disconnect(self._initialize_size_handler_id)
         del self._initialize_size_handler_id
-        self._last_size = None
-        self._on_size_allocate(self.get_allocation())
+        self._resize(self._terminal.get_column_count(),
+                     self._terminal.get_row_count(), self.get_allocation())
 
     def _on_size_allocate(self, allocation):
         if self._last_size == (allocation.width,
                                allocation.height) or self.is_maximized():
             return
+        self._resize(self._terminal.get_column_count(),
+                     self._terminal.get_row_count(), allocation)
+
+    def _resize(self, column_count, row_count, allocation):
         terminal_allocation = self._terminal.get_allocation()
         padding = self._terminal.get_style_context().get_padding(
             self._terminal.get_state_flags())
         width = allocation.width - terminal_allocation.width + padding.left + padding.right + self._terminal.get_char_width(
-        ) * self._terminal.get_column_count()
+        ) * column_count
         height = allocation.height - terminal_allocation.height + padding.top + padding.bottom + self._terminal.get_char_height(
-        ) * self._terminal.get_row_count()
+        ) * row_count
         self._last_size = (width, height)
-        self.resize(width, height)
+        self._last_terminal_size = (column_count, row_count)
+        with GObject.signal_handler_block(self,
+                                          self._size_allocate_handler_id):
+            with GObject.signal_handler_block(
+                    self._terminal, self._terminal_resize_window_handler_id):
+                self.resize(width, height)
+                self._terminal.set_size(column_count, row_count)
