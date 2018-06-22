@@ -44,12 +44,20 @@ class Window(Gtk.Window):
         self._last_terminal_size = None
         self._terminal_resize_window_handler_id = self._terminal.connect(
             'resize-window', self._on_terminal_resize_window)
+        self._terminal.connect('char-size-changed',
+                               self._on_terminal_char_size_changed)
         self.connect('delete-event', self._terminal.on_window_delete)
         self._last_size = None
         self._size_allocate_handler_id = self.connect('size-allocate',
                                                       Window._on_size_allocate)
         self._initialize_size_handler_id = self._terminal.connect(
             'window-title-changed', self._initialize_size)
+
+    def _on_terminal_char_size_changed(self, _terminal, _width, _height):
+        if hasattr(self, '_initialize_size_handler_id'):
+            return
+        self._resize(self._terminal.get_column_count(),
+                     self._terminal.get_row_count(), self.get_allocation())
 
     def _on_terminal_resize_window(self, _terminal, column_count, row_count):
         if self._last_terminal_size == (column_count, row_count):
