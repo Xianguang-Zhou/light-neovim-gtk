@@ -46,6 +46,8 @@ class Window(Gtk.Window):
             'resize-window', self._on_terminal_resize_window)
         self._terminal.connect('char-size-changed',
                                self._on_terminal_char_size_changed)
+        self._terminal.connect('move-window',
+                               lambda _terminal, x, y: self.move(x, y))
         self.connect('delete-event', self._terminal.on_window_delete)
         self._last_size = None
         self._size_allocate_handler_id = self.connect('size-allocate',

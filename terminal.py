@@ -90,6 +90,11 @@ GtkWidget {
                 GLib.idle_add(self._notify_font, *args[1:])
             elif first_arg == 'Color':
                 GLib.idle_add(self._notify_color, *args[1:])
+            elif first_arg == 'WinPos':
+                GLib.idle_add(self._notify_win_pos, *args[1:])
+
+    def _notify_win_pos(self, x, y):
+        self.emit('move-window', int(x), int(y))
 
     def _notify_font(self, font_str):
         font_family, *font_attrs = font_str.split(':')

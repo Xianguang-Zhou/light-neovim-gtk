@@ -48,3 +48,6 @@ function s:GuiCursor() abort
 endfunction
 call s:GuiCursor()
 
+command! -nargs=+ WinPos call gui#WinPos(<f-args>)
+command! -nargs=+ Winpos call gui#WinPos(<f-args>)
+
