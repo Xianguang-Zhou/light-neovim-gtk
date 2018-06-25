@@ -10,3 +10,7 @@ function! gui#WinPos(x, y) abort
   call rpcnotify(g:gui_channel, 'Gui', 'WinPos', a:x, a:y)
 endfunction
 
+function! gui#Opacity(opacity) abort
+  call rpcnotify(g:gui_channel, 'Gui', 'Opacity', a:opacity)
+endfunction
+

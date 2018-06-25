@@ -25,7 +25,7 @@ gi.require_version('Pango', '1.0')
 gi.require_version('Gdk', '3.0')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Vte', '2.91')
-from gi.repository import GLib, Pango, Gdk, Gtk, Vte
+from gi.repository import GLib, GObject, Pango, Gdk, Gtk, Vte
 import constant
 
 __author__ = 'Xianguang Zhou <xianguang.zhou@outlook.com>'
@@ -92,6 +92,15 @@ GtkWidget {
                 GLib.idle_add(self._notify_color, *args[1:])
             elif first_arg == 'WinPos':
                 GLib.idle_add(self._notify_win_pos, *args[1:])
+            elif first_arg == 'Opacity':
+                GLib.idle_add(self._notify_opacity, *args[1:])
+
+    def _notify_opacity(self, opacity):
+        self.emit('opacity-changed', float(opacity))
+
+    @GObject.Signal
+    def opacity_changed(self, opacity: float):
+        pass
 
     def _notify_win_pos(self, x, y):
         self.emit('move-window', int(x), int(y))

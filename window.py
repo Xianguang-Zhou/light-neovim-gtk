@@ -17,8 +17,9 @@
 
 import os
 import gi
+gi.require_version('Gdk', '3.0')
 gi.require_version('Gtk', '3.0')
-from gi.repository import GObject, Gtk
+from gi.repository import GObject, Gdk, Gtk
 import constant
 from terminal import Terminal
 
@@ -31,9 +32,6 @@ class Window(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self)
         self.set_title('NVIM')
-        self.set_icon_from_file(
-            os.path.join(constant.resource_dir, 'icon',
-                         'light_neovim_gtk.svg'))
         self._terminal = Terminal()
         self.add(self._terminal)
         self._terminal.connect('child-exited',
@@ -48,12 +46,24 @@ class Window(Gtk.Window):
                                self._on_terminal_char_size_changed)
         self._terminal.connect('move-window',
                                lambda _terminal, x, y: self.move(x, y))
+        self._terminal.connect(
+            'opacity-changed',
+            lambda _terminal, opacity: self.set_opacity(opacity))
         self.connect('delete-event', self._terminal.on_window_delete)
         self._last_size = None
         self._size_allocate_handler_id = self.connect('size-allocate',
                                                       Window._on_size_allocate)
         self._initialize_size_handler_id = self._terminal.connect(
             'window-title-changed', self._initialize_size)
+        self.set_icon_from_file(
+            os.path.join(constant.resource_dir, 'icon',
+                         'light_neovim_gtk.svg'))
+        if self.is_composited():
+            screen = Gdk.Screen.get_default()
+            visual = screen.get_rgba_visual()
+            if visual is None:
+                visual = screen.get_system_visual()
+            self.set_visual(visual)
 
     def _on_terminal_char_size_changed(self, _terminal, _width, _height):
         if hasattr(self, '_initialize_size_handler_id'):
