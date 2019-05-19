@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2018 Xianguang Zhou <xianguang.zhou@outlook.com>
+# Copyright (C) 2018, 2019, Xianguang Zhou <xianguang.zhou@outlook.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -24,7 +24,8 @@ import constant
 from terminal import Terminal
 
 __author__ = 'Xianguang Zhou <xianguang.zhou@outlook.com>'
-__copyright__ = 'Copyright (C) 2018 Xianguang Zhou <xianguang.zhou@outlook.com>'
+__copyright__ = \
+    'Copyright (C) 2018, 2019, Xianguang Zhou <xianguang.zhou@outlook.com>'
 __license__ = 'AGPL-3.0'
 
 
@@ -49,6 +50,7 @@ class Window(Gtk.Window):
         self._terminal.connect(
             'opacity-changed',
             lambda _terminal, opacity: self.set_opacity(opacity))
+        self._terminal.add_key_binding()
         self.connect('delete-event', self._terminal.on_window_delete)
         self._last_size = None
         self._size_allocate_handler_id = self.connect('size-allocate',

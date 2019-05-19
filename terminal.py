@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2018 Xianguang Zhou <xianguang.zhou@outlook.com>
+# Copyright (C) 2018, 2019, Xianguang Zhou <xianguang.zhou@outlook.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -29,7 +29,8 @@ from gi.repository import GLib, GObject, Pango, Gdk, Gtk, Vte
 import constant
 
 __author__ = 'Xianguang Zhou <xianguang.zhou@outlook.com>'
-__copyright__ = 'Copyright (C) 2018 Xianguang Zhou <xianguang.zhou@outlook.com>'
+__copyright__ = \
+    'Copyright (C) 2018, 2019, Xianguang Zhou <xianguang.zhou@outlook.com>'
 __license__ = 'AGPL-3.0'
 
 
@@ -53,6 +54,13 @@ GtkWidget {
         self._cursor_moved_handler_id = self.connect('cursor-moved',
                                                      Terminal._on_cursor_moved)
         GLib.idle_add(self._spawn)
+
+    def add_key_binding(self):
+        accel_group = Gtk.AccelGroup()
+        self.get_toplevel().add_accel_group(accel_group)
+        accel_key, accel_mods = Gtk.accelerator_parse('<Control><Shift>V')
+        self.add_accelerator('paste-clipboard', accel_group, accel_key,
+                             accel_mods, Gtk.AccelFlags.VISIBLE)
 
     def _on_cursor_moved(self):
         self.disconnect(self._cursor_moved_handler_id)
@@ -117,7 +125,11 @@ GtkWidget {
             elif attr_type == 'i':
                 font_desc.set_style(Pango.Style.ITALIC)
         self.set_font(font_desc)
-        self._nvim.command('let g:GuiFont="%s"' % font_str, async_=True)
+
+        def _callback():
+            self._nvim.command('let g:GuiFont="%s"' % font_str, async_=True)
+
+        self._nvim.async_call(_callback)
 
     def _notify_color(self, color_str):
         rgba = Gdk.RGBA()

@@ -10,7 +10,7 @@
 * VTE https://wiki.gnome.org/Apps/Terminal/VTE
 * PyGObject https://wiki.gnome.org/Projects/PyGObject
 
-On Ubuntu 16.04, install dependencies(except Neovim) by these commands:
+On Ubuntu 16.04 or Debian 9.9, install dependencies(except Neovim) by these commands:
 
 ```sh
 sudo apt-get install python3-dev python3-pip python3-gi gir1.2-vte-2.91
