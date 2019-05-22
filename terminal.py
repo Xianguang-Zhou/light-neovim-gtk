@@ -19,7 +19,7 @@ import os
 import sys
 import threading
 import uuid
-import neovim
+import pynvim
 import gi
 gi.require_version('Pango', '1.0')
 gi.require_version('Gdk', '3.0')
@@ -65,7 +65,7 @@ GtkWidget {
     def _on_cursor_moved(self):
         self.disconnect(self._cursor_moved_handler_id)
         del self._cursor_moved_handler_id
-        self._nvim = neovim.attach('socket', path=self._nvim_listen_address)
+        self._nvim = pynvim.attach('socket', path=self._nvim_listen_address)
         del self._nvim_listen_address
         self._nvim.vars['gui_channel'] = self._nvim.channel_id
         self._nvim.subscribe('Gui')
@@ -144,5 +144,5 @@ GtkWidget {
     def _quit_nvim(self):
         try:
             self._nvim.quit('qa')
-        except neovim.api.nvim.NvimError:
+        except pynvim.api.nvim.NvimError:
             pass
