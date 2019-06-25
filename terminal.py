@@ -37,7 +37,7 @@ __license__ = 'AGPL-3.0'
 class Terminal(Vte.Terminal):
     css_provider = Gtk.CssProvider.new()
     css_provider.load_from_data(b'''
-GtkWidget {
+vte-terminal {
     -GtkWidget-cursor-aspect-ratio: 0.1;
 }
 ''')
