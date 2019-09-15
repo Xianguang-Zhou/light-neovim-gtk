@@ -1,4 +1,4 @@
-" Copyright (C) 2018 Xianguang Zhou <xianguang.zhou@outlook.com>
+" Copyright (C) 2018, 2019, Xianguang Zhou <xianguang.zhou@outlook.com>
 " license: AGPL-3.0
 
 " Set GUI font.
@@ -12,5 +12,9 @@ endfunction
 
 function! gui#Opacity(opacity) abort
   call rpcnotify(g:gui_channel, 'Gui', 'Opacity', a:opacity)
+endfunction
+
+function! gui#Image(path, opacity) abort
+  call rpcnotify(g:gui_channel, 'Gui', 'Image', a:path, a:opacity)
 endfunction
 

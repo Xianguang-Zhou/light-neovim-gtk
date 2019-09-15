@@ -19,7 +19,7 @@ import os
 import gi
 gi.require_version('Gdk', '3.0')
 gi.require_version('Gtk', '3.0')
-from gi.repository import GObject, Gdk, Gtk
+from gi.repository import GObject, Gdk, Gtk, GLib
 import constant
 from terminal import Terminal
 
@@ -33,23 +33,27 @@ class Window(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self)
         self.set_title('NVIM')
-        self._terminal = Terminal()
-        self.add(self._terminal)
-        self._terminal.connect('child-exited',
-                               lambda _status, _user_data: self.destroy())
+        self._layout = Gtk.Layout.new(None, None)
+        self.add(self._layout)
+        self._image = Gtk.Image()
+        self._layout.put(self._image, 0, 0)
+        self._terminal = Terminal(self._image)
+        self._layout.put(self._terminal, 0, 0)
         self._terminal.connect(
-            'window-title-changed',
-            lambda terminal: self.set_title(terminal.get_window_title()))
+            'child-exited', lambda _status, _user_data: self.destroy())
+        self._terminal.connect(
+            'window-title-changed', lambda terminal: self.set_title(
+                terminal.get_window_title()))
         self._last_terminal_size = None
         self._terminal_resize_window_handler_id = self._terminal.connect(
             'resize-window', self._on_terminal_resize_window)
         self._terminal.connect('char-size-changed',
                                self._on_terminal_char_size_changed)
-        self._terminal.connect('move-window',
-                               lambda _terminal, x, y: self.move(x, y))
         self._terminal.connect(
-            'opacity-changed',
-            lambda _terminal, opacity: self.set_opacity(opacity))
+            'move-window', lambda _terminal, x, y: self.move(x, y))
+        self._terminal.connect(
+            'opacity-changed', lambda _terminal, opacity: self.set_opacity(
+                opacity))
         self._terminal.add_key_binding()
         self.connect('delete-event', self._terminal.on_window_delete)
         self._last_size = None
@@ -57,6 +61,7 @@ class Window(Gtk.Window):
                                                       Window._on_size_allocate)
         self._initialize_size_handler_id = self._terminal.connect(
             'window-title-changed', self._initialize_size)
+        self.connect('window-state-event', Window._on_window_state)
         self.set_icon_from_file(
             os.path.join(constant.resource_dir, 'icon',
                          'light_neovim_gtk.svg'))
@@ -66,6 +71,21 @@ class Window(Gtk.Window):
             if visual is None:
                 visual = screen.get_system_visual()
             self.set_visual(visual)
+
+    def _on_window_state(self, event):
+        def _callback():
+            size = self.get_size()
+            with GObject.signal_handler_block(self,
+                                              self._size_allocate_handler_id):
+                with GObject.signal_handler_block(
+                        self._terminal,
+                        self._terminal_resize_window_handler_id):
+                    self._terminal.set_size_request(size.width, size.height)
+        if event.new_window_state & Gdk.WindowState.MAXIMIZED \
+                or event.new_window_state & Gdk.WindowState.FULLSCREEN \
+                or event.new_window_state & Gdk.WindowState.FOCUSED :
+            GLib.idle_add(_callback)
+        return False
 
     def _on_terminal_char_size_changed(self, _terminal, _width, _height):
         if hasattr(self, '_initialize_size_handler_id'):
@@ -107,3 +127,4 @@ class Window(Gtk.Window):
                     self._terminal, self._terminal_resize_window_handler_id):
                 self.resize(width, height)
                 self._terminal.set_size(column_count, row_count)
+                self._terminal.set_size_request(width, height)

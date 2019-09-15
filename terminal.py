@@ -23,9 +23,10 @@ import pynvim
 import gi
 gi.require_version('Pango', '1.0')
 gi.require_version('Gdk', '3.0')
+gi.require_version('GdkPixbuf', '2.0')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Vte', '2.91')
-from gi.repository import GLib, GObject, Pango, Gdk, Gtk, Vte
+from gi.repository import GLib, GObject, Pango, Gdk, GdkPixbuf, Gtk, Vte
 import constant
 
 __author__ = 'Xianguang Zhou <xianguang.zhou@outlook.com>'
@@ -35,17 +36,17 @@ __license__ = 'AGPL-3.0'
 
 
 class Terminal(Vte.Terminal):
-    css_provider = Gtk.CssProvider.new()
-    css_provider.load_from_data(b'''
+    def __init__(self, image):
+        Vte.Terminal.__init__(self)
+        self._image = image
+        self._css_provider = Gtk.CssProvider.new()
+        self._css_provider.load_from_data(b'''
 vte-terminal {
     -GtkWidget-cursor-aspect-ratio: 0.1;
 }
 ''')
-
-    def __init__(self):
-        Vte.Terminal.__init__(self)
         self.get_style_context().add_provider(
-            Terminal.css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            self._css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         self.set_cursor_blink_mode(Vte.CursorBlinkMode.ON)
         self.set_mouse_autohide(True)
         self._is_vim_inited = False
@@ -71,10 +72,10 @@ vte-terminal {
         self._nvim.subscribe('Gui')
         self._nvim.command('ru plugin/light_neovim_gtk.vim', async_=True)
         self._nvim.command('ru! ginit.vim', async_=True)
-        threading.Thread(
-            target=self._nvim.run_loop,
-            args=(self._on_nvim_request, self._on_nvim_notification),
-            daemon=True).start()
+        threading.Thread(target=self._nvim.run_loop,
+                         args=(self._on_nvim_request,
+                               self._on_nvim_notification),
+                         daemon=True).start()
 
         def _callback():
             self._is_vim_inited = True
@@ -102,6 +103,12 @@ vte-terminal {
                 GLib.idle_add(self._notify_win_pos, *args[1:])
             elif first_arg == 'Opacity':
                 GLib.idle_add(self._notify_opacity, *args[1:])
+            elif first_arg == 'Image':
+                GLib.idle_add(self._notify_image, *args[1:])
+
+    def _notify_image(self, path, opacity):
+        self._image.set_from_file(path)
+        self.set_opacity(float(opacity))
 
     def _notify_opacity(self, opacity):
         self.emit('opacity-changed', float(opacity))
