@@ -54,6 +54,9 @@ class Window(Gtk.Window):
         self._terminal.connect(
             'opacity-changed', lambda _terminal, opacity: self.set_opacity(
                 opacity))
+        self._terminal.connect(
+            'maximize', lambda _terminal, maximize: self.maximize()
+            if maximize else self.unmaximize())
         self._terminal.add_key_binding()
         self.connect('delete-event', self._terminal.on_window_delete)
         self._last_size = None

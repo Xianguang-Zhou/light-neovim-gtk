@@ -18,3 +18,7 @@ function! gui#Image(path, opacity) abort
   call rpcnotify(g:gui_channel, 'Gui', 'Image', a:path, a:opacity)
 endfunction
 
+function! gui#Maximize(maximize) abort
+  call rpcnotify(g:gui_channel, 'Gui', 'Maximize', a:maximize)
+endfunction
+

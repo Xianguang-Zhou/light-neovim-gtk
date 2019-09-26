@@ -105,6 +105,15 @@ vte-terminal {
                 GLib.idle_add(self._notify_opacity, *args[1:])
             elif first_arg == 'Image':
                 GLib.idle_add(self._notify_image, *args[1:])
+            elif first_arg == 'Maximize':
+                GLib.idle_add(self._notify_maximize, *args[1:])
+
+    def _notify_maximize(self, maximize):
+        self.emit('maximize', bool(maximize))
+
+    @GObject.Signal
+    def maximize(self, maximize: bool):
+        pass
 
     def _notify_image(self, path, opacity):
         self._image.set_from_file(path)
