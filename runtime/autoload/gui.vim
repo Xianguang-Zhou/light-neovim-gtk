@@ -1,4 +1,4 @@
-" Copyright (C) 2018, 2019, Xianguang Zhou <xianguang.zhou@outlook.com>
+" Copyright (c) 2018, 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
 " license: AGPL-3.0
 
 " Set GUI font.
@@ -22,3 +22,10 @@ function! gui#Maximize(maximize) abort
   call rpcnotify(g:gui_channel, 'Gui', 'Maximize', a:maximize)
 endfunction
 
+function! gui#Colors(foreground, background, palette) abort
+  call rpcnotify(g:gui_channel, 'Gui', 'Colors', a:foreground, a:background, a:palette)
+endfunction
+
+function! gui#Palette(palette) abort
+  call gui#Colors('', '', a:palette)
+endfunction

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2018, 2019, Xianguang Zhou <xianguang.zhou@outlook.com>
+# Copyright (c) 2018, 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -31,8 +31,14 @@ import constant
 
 __author__ = 'Xianguang Zhou <xianguang.zhou@outlook.com>'
 __copyright__ = \
-    'Copyright (C) 2018, 2019, Xianguang Zhou <xianguang.zhou@outlook.com>'
+    'Copyright (c) 2018, 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.'
 __license__ = 'AGPL-3.0'
+
+
+def str_to_color(color_str):
+    color = Gdk.RGBA()
+    color.parse(color_str)
+    return color
 
 
 class Terminal(Vte.Terminal):
@@ -107,6 +113,27 @@ vte-terminal {
                 GLib.idle_add(self._notify_image, *args[1:])
             elif first_arg == 'Maximize':
                 GLib.idle_add(self._notify_maximize, *args[1:])
+            elif first_arg == 'Colors':
+                GLib.idle_add(self._notify_colors, *args[1:])
+
+    def _notify_colors(self, foreground_str, background_str, palette_str_list):
+        if len(foreground_str) != 0:
+            foreground = Gdk.RGBA()
+            foreground.parse(foreground_str)
+        else:
+            foreground = None
+        if len(background_str) != 0:
+            background = Gdk.RGBA()
+            background.parse(background_str)
+        else:
+            background = None
+        if len(palette_str_list) != 0:
+            palette = [
+                str_to_color(color_str) for color_str in palette_str_list
+            ]
+        else:
+            palette = None
+        self.set_colors(foreground, background, palette)
 
     def _notify_maximize(self, maximize):
         self.emit('maximize', bool(maximize))
