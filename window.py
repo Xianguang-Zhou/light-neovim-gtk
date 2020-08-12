@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2018, 2019, Xianguang Zhou <xianguang.zhou@outlook.com>
+# Copyright (c) 2018, 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -25,13 +25,14 @@ from terminal import Terminal
 
 __author__ = 'Xianguang Zhou <xianguang.zhou@outlook.com>'
 __copyright__ = \
-    'Copyright (C) 2018, 2019, Xianguang Zhou <xianguang.zhou@outlook.com>'
+    'Copyright (c) 2018, 2020, Xianguang Zhou <xianguang.zhou@outlook.com>. All rights reserved.'
 __license__ = 'AGPL-3.0'
 
 
 class Window(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self)
+        self.set_wmclass('NVIM', 'NVIM')
         self.set_title('NVIM')
         self._layout = Gtk.Layout.new(None, None)
         self.add(self._layout)
