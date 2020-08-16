@@ -47,7 +47,7 @@ class Terminal(Vte.Terminal):
         self._image = image
         self._css_provider = Gtk.CssProvider.new()
         self._css_provider.load_from_data(b'''
-vte-terminal {
+vte-terminal, GtkWidget {
     -GtkWidget-cursor-aspect-ratio: 0.1;
 }
 ''')
