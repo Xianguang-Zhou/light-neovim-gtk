@@ -22,6 +22,10 @@ function! gui#Maximize(maximize) abort
   call rpcnotify(g:gui_channel, 'Gui', 'Maximize', a:maximize)
 endfunction
 
+function! gui#Decorated(setting) abort
+  call rpcnotify(g:gui_channel, 'Gui', 'Decorated', a:setting)
+endfunction
+
 function! gui#Colors(foreground, background, palette) abort
   call rpcnotify(g:gui_channel, 'Gui', 'Colors', a:foreground, a:background, a:palette)
 endfunction

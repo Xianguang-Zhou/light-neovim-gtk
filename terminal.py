@@ -113,8 +113,17 @@ vte-terminal, GtkWidget {
                 GLib.idle_add(self._notify_image, *args[1:])
             elif first_arg == 'Maximize':
                 GLib.idle_add(self._notify_maximize, *args[1:])
+            elif first_arg == 'Decorated':
+                GLib.idle_add(self._notify_decorated, *args[1:])
             elif first_arg == 'Colors':
                 GLib.idle_add(self._notify_colors, *args[1:])
+
+    def _notify_decorated(self, setting):
+        self.emit('decorated', bool(setting))
+
+    @GObject.Signal
+    def decorated(self, setting: bool):
+        pass
 
     def _notify_colors(self, foreground_str, background_str, palette_str_list):
         if len(foreground_str) != 0:

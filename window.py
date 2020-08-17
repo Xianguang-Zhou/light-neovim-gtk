@@ -58,6 +58,7 @@ class Window(Gtk.Window):
         self._terminal.connect(
             'maximize', lambda _terminal, maximize: self.maximize()
             if maximize else self.unmaximize())
+        self._terminal.connect('decorated', self._on_terminal_decorated)
         self._terminal.add_key_binding()
         self.connect('delete-event', self._terminal.on_window_delete)
         self._last_size = None
@@ -75,6 +76,9 @@ class Window(Gtk.Window):
             if visual is None:
                 visual = screen.get_system_visual()
             self.set_visual(visual)
+
+    def _on_terminal_decorated(self, _terminal, setting):
+        self.set_decorated(setting)
 
     def _on_window_state(self, event):
         def _callback():
